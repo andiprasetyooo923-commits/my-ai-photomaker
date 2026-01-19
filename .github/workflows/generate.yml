@@ -1,16 +1,16 @@
 name: Generate 10 Images
 on:
-  workflow_dispatch: # Supaya bisa dijalankan manual dengan klik tombol
+  workflow_dispatch: 
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4 # Update ke v4 juga untuk checkout
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5 # Update ke v5 untuk setup-python
         with:
           python-version: '3.9'
 
@@ -24,7 +24,8 @@ jobs:
         run: python script.py
 
       - name: Upload Results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4 # PERBAIKAN DI SINI (Ganti v3 ke v4)
         with:
           name: ai-images
           path: results/
+          
