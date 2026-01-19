@@ -1,31 +1,34 @@
-name: Generate 10 Images
+name: Generate 10 Images to FinalPlay
 on:
   workflow_dispatch: 
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # PENTING: Izin untuk menyimpan file ke repo
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4 # Update ke v4 juga untuk checkout
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v5 # Update ke v5 untuk setup-python
+        uses: actions/setup-python@v5
         with:
           python-version: '3.9'
 
       - name: Install dependencies
         run: |
-          pip install google-generativeai
+          pip install google-generativeai pillow
 
       - name: Run Generator
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: python script.py
 
-      - name: Upload Results
-        uses: actions/upload-artifact@v4 # PERBAIKAN DI SINI (Ganti v3 ke v4)
-        with:
-          name: ai-images
-          path: results/
-          
+      - name: Commit and Push to Repository
+        run: |
+          git config --global user.name "GitHub Action"
+          git config --global user.email "action@github.com"
+          git add finalplay/*.png
+          git commit -m "Auto-generate images to finalplay" || echo "No changes to commit"
+          git push
