@@ -1,14 +1,18 @@
 name: Generate 10 Images to FinalPlay
+
 on:
-  workflow_dispatch: 
+  workflow_dispatch: # Menjalankan manual dari tab Actions
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    
+    # Memberikan izin kepada bot untuk menulis file ke dalam repository
     permissions:
-      contents: write # PENTING: Izin untuk menyimpan file ke repo
+      contents: write
+
     steps:
-      - name: Checkout code
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
       - name: Set up Python
@@ -16,19 +20,27 @@ jobs:
         with:
           python-version: '3.9'
 
-      - name: Install dependencies
+      - name: Install Dependencies
         run: |
           pip install google-generativeai pillow
 
-      - name: Run Generator
+      - name: Run Image Generator
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: python script.py
 
-      - name: Commit and Push to Repository
+      - name: Save and Push Images
         run: |
-          git config --global user.name "GitHub Action"
-          git config --global user.email "action@github.com"
-          git add finalplay/*.png
-          git commit -m "Auto-generate images to finalplay" || echo "No changes to commit"
-          git push
+          # Konfigurasi identitas bot GitHub
+          git config --global user.name "GitHub Action Bot"
+          git config --global user.email "actions@github.com"
+          
+          # Cek apakah folder finalplay ada dan berisi file .png
+          if [ -d "finalplay" ] && ls finalplay/*.png 1> /dev/null 2>&1; then
+            echo "Gambar ditemukan, memulai proses upload..."
+            git add finalplay/*.png
+            git commit -m "Automated: Generate images via Banana Model [skip ci]"
+            git push
+          else
+            echo "Tidak ada gambar yang dihasilkan. Melewati proses push."
+          fi
