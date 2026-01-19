@@ -1,58 +1,34 @@
-import streamlit as st
 import google.generativeai as genai
+import os
 
-# --- KONFIGURASI API ---
-# Tempelkan API Key yang baru saja Anda dapatkan di sini
-API_KEY = "AIzaSyBs_m8CVvIX8kqCuJ9jSKCfUq6dN4yz6LI"
-genai.configure(api_key=API_KEY)
+# Ambil API Key dari Secret GitHub (Lebih Aman)
+api_key = os.getenv("AIzaSyBs_m8CVvIX8kqCuJ9jSKCfUq6dN4yz6LI")
+genai.configure(api_key=api_key)
 
-# --- TAMPILAN APLIKASI ---
-st.set_page_config(page_title="10-Prompt Image Generator", layout="wide")
+def run_workflow():
+    # Membaca 10 prompt dari file
+    if not os.path.exists("prompts.txt"):
+        print("File prompts.txt tidak ditemukan!")
+        return
 
-st.title("📸 Mega Image Generator (10 Prompts)")
-st.write("Masukkan 10 deskripsi gambar di bawah ini untuk dibuat secara bersamaan.")
+    with open("prompts.txt", "r") as f:
+        prompts = [line.strip() for line in f.readlines() if line.strip()]
 
-# Membuat form input otomatis untuk 10 prompt
-prompts = []
-col_input1, col_input2 = st.columns(2)
+    model = genai.GenerativeModel('imagen-3.0-generate-001')
 
-for i in range(1, 11):
-    # Membagi input ke dua kolom agar tidak terlalu panjang ke bawah
-    target_col = col_input1 if i <= 5 else col_input2
-    with target_col:
-        p = st.text_input(f"Prompt {i}:", placeholder=f"Deskripsi gambar ke-{i}...")
-        prompts.append(p)
+    # Buat folder untuk hasil jika belum ada
+    if not os.path.exists("results"):
+        os.makedirs("results")
 
-st.divider()
+    for i, p in enumerate(prompts[:10]):
+        print(f"Generating image {i+1}: {p}")
+        try:
+            response = model.generate_content(p)
+            # Simpan hasil gambar (tergantung format return API)
+            # Contoh: response.images[0].save(f"results/image_{i+1}.png")
+        except Exception as e:
+            print(f"Error pada prompt {i+1}: {e}")
 
-# Tombol Eksekusi
-if st.button("Generate 10 Gambar Sekarang", type="primary"):
-    # Cek apakah semua prompt sudah diisi
-    if all(prompts):
-        st.write("### 🚀 Hasil Generasi Gambar:")
-        
-        # Membuat grid tampilan hasil (2 gambar per baris)
-        cols = st.columns(2)
-        
-        for index, p_text in enumerate(prompts):
-            # Menentukan kolom mana (0 atau 1)
-            col_idx = index % 2
-            with cols[col_idx]:
-                with st.spinner(f"Memproses Gambar {index+1}..."):
-                    try:
-                        # Memanggil model Image (Banana/Imagen)
-                        model = genai.GenerativeModel('imagen-3.0-generate-001')
-                        # Catatan: Pastikan API Key Anda memiliki akses ke model Imagen
-                        response = model.generate_content(p_text)
-                        
-                        # Menampilkan hasil
-                        st.subheader(f"Gambar {index+1}")
-                        st.info(f"Prompt: {p_text}")
-                        # st.image(response.images[0]) # Mengasumsikan response mengembalikan objek image
-                    except Exception as e:
-                        st.error(f"Gagal memproses gambar {index+1}: {e}")
-    else:
-        st.warning("Harap isi semua (10) kolom prompt sebelum menekan tombol!")
-
-# --- FOOTER ---
-st.caption("Aplikasi Multi-Prompt Power by Google Gemini Nano")
+if __name__ == "__main__":
+    run_workflow()
+    
