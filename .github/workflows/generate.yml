@@ -1,0 +1,30 @@
+name: Generate 10 Images
+on:
+  workflow_dispatch: # Supaya bisa dijalankan manual dengan klik tombol
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies
+        run: |
+          pip install google-generativeai
+
+      - name: Run Generator
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: python script.py
+
+      - name: Upload Results
+        uses: actions/upload-artifact@v3
+        with:
+          name: ai-images
+          path: results/
