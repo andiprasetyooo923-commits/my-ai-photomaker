@@ -1,15 +1,52 @@
+name: Generate 10 Images to FinalPlay
+
+on:
+  workflow_dispatch: # Tombol manual di tab Actions
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    # PENTING: Memberikan izin agar bot bisa menulis/push ke repository Anda
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          # Memastikan history diambil agar push tidak error
+          fetch-depth: 0 
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+
+      - name: Install Dependencies
+        run: |
+          pip install google-generativeai pillow
+
+      - name: Run Image Generator
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: python script.py
+
       - name: Save and Push Images
         run: |
+          # 1. Konfigurasi Bot
           git config --global user.name "GitHub Action Bot"
           git config --global user.email "actions@github.com"
           
-          # Paksa tambahkan folder finalplay
-          git add finalplay/
+          # 2. Pastikan folder dikenali oleh Git
+          # Jika folder belum ada, ini akan menghindari error 'pathspec'
+          git add finalplay/*.png || echo "Belum ada file gambar baru."
           
-          # Cek apakah ada perubahan (file baru)
-          if git diff --cached --quiet; then
-            echo "Tidak ada gambar baru untuk di-commit."
-          else
+          # 3. Cek apakah ada file yang siap di-commit
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "Menemukan file baru, melakukan commit..."
             git commit -m "Simpan hasil foto AI ke finalplay [skip ci]"
             git push origin main
+          else
+            echo "Tidak ada perubahan atau gambar yang dihasilkan."
           fi
