@@ -44,3 +44,4 @@ jobs:
           else
             echo "Tidak ada gambar yang dihasilkan. Melewati proses push."
           fi
+          
